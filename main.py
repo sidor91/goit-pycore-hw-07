@@ -73,9 +73,9 @@ class Birthday(Field):
 
 class Record:
     def __init__(self, name):
-        self.name = Name(name)
-        self.phones = []
-        self.birthday = None
+        self.name: Name = Name(name)
+        self.phones: list[Phone] = []
+        self.birthday: Birthday = None
 
     def add_phone(self, phone: str) -> None:
         self.phones.append(Phone(phone))
@@ -129,10 +129,19 @@ class AddressBook(UserDict):
                 '"add" command should contain 2 arguments "name" and "phone number"'
             )
         name, phone = args[0], args[1]
-        new_record = Record(name)
-        new_record.add_phone(phone)
-        self.data[name] = new_record
-        return f"Contact {name} added"
+        existing_contact: Record = self.data.get(name, f"User {name} not found")
+        if isinstance(existing_contact, str):
+            new_record = Record(name)
+            new_record.add_phone(phone)
+            self.data[name] = new_record
+            return f"Contact {name} added"
+        else:
+            existing_contact_phones = existing_contact.phones
+            if Phone(phone) in existing_contact_phones:
+                raise ValueError(f"The phone {phone} already exists in contact {name}")
+            else:
+                existing_contact.add_phone(phone)
+                return f"New phone for contact {name} has been added"
 
     @input_error
     def find(self, args: list[str]) -> Record | str:
